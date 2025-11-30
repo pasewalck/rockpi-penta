@@ -48,9 +48,9 @@ class Pwm:
 class Gpio:
 
     def _tr(self):
-        
+
         setting = gpiod.LineSettings(
-                    direction=gpiod.line.Direction.OUTPUT, 
+                    direction=gpiod.line.Direction.OUTPUT,
                     output_value=gpiod.line.Value.INACTIVE)
 
         with gpiod.request_lines(
@@ -59,12 +59,19 @@ class Gpio:
             config={ self.line: setting },
         ) as request:
             while True:
-                request.set_value(self.line, gpiod.line.Value.ACTIVE)
-                time.sleep(self.value[0])
-                request.set_value(self.line, gpiod.line.Value.INACTIVE)
-                time.sleep(self.value[1])
+                if self.value[1] > self.period_s * .9:
+                    request.set_value(self.line, gpiod.line.Value.INACTIVE)
+                    time.sleep(0.1)
+                elif self.value[1] < self.period_s * .1:
+                    request.set_value(self.line, gpiod.line.Value.ACTIVE)
+                    time.sleep(0.1)
+                else:
+                    request.set_value(self.line, gpiod.line.Value.ACTIVE)
+                    time.sleep(self.value[0])
+                    request.set_value(self.line, gpiod.line.Value.INACTIVE)
+                    time.sleep(self.value[1])
 
-    
+
     def __init__(self, period_s):
 
         self.gpio = os.environ['FAN_CHIP']

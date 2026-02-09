@@ -180,7 +180,7 @@ def get_disk_info(cache={}):
         info['root'] = check_output(cmd)
         for x in conf['disk']:
             cmd = "df -Bg | awk '$1==\"/dev/{}\" {{printf \"%s\", $5}}'".format(x)
-            info[x] = check_output(cmd)
+            info[x.split("/")[-1]] = check_output(cmd)
         cache['info'] = list(zip(*info.items()))
         cache['time'] = time.time()
 

@@ -98,7 +98,15 @@ def get_dc(cache={}):
 
     if time.time() - cache.get('time', 0) > 10:
         cache['time'] = time.time()
-        cache['dc'] = misc.fan_temp2dc(read_temp())
+
+        new_dc = misc.fan_temp2dc(read_temp())
+
+        if new_dc > cache.get('dc', new_dc):
+            cache['start_run_time'] = cache['time']
+            cache['dc'] = new_dc
+        elif misc.fan_after_run(cache['time'],cache.get('start_run_time', 0)):
+            cache['dc'] = new_dc
+
 
     return cache['dc']
 
@@ -119,7 +127,6 @@ def running():
     else:
         pin = Gpio(0.025)
     while True:
-
         dc = get_dc()
         change_dc(dc)
         time.sleep(1)

@@ -22,7 +22,7 @@ cmds = {
 }
 
 FAN_DUTY_OFF = 0.0
-FAN_DUTY_ON  = 1.0 
+FAN_DUTY_ON  = 1.0
 lv2dc = OrderedDict({'lv3': 1.0, 'lv2':0.75, 'lv1': 0.5, 'lv0': 0.25})
 duty2dc = lambda x: 1.0 - x
 
@@ -65,6 +65,7 @@ def read_conf():
         conf['fan']['lv1'] = cfg.getfloat('fan', 'lv1')
         conf['fan']['lv2'] = cfg.getfloat('fan', 'lv2')
         conf['fan']['lv3'] = cfg.getfloat('fan', 'lv3')
+        conf['fan']['after_run'] = cfg.getfloat('fan', 'after_run')
         # key
         conf['key']['click'] = cfg.get('key', 'click')
         conf['key']['twice'] = cfg.get('key', 'twice')
@@ -92,6 +93,7 @@ def read_conf():
         conf['fan']['lv1'] = 40
         conf['fan']['lv2'] = 45
         conf['fan']['lv3'] = 50
+        conf['fan']['after_run'] = 60
         # key
         conf['key']['click'] = 'slider'
         conf['key']['twice'] = 'switch'
@@ -135,7 +137,7 @@ def read_key_events(chip_device, chip_line):
 
         while True:
             if not request.wait_edge_events(wait):
-                if click_count == 0:        
+                if click_count == 0:
                     ignore_release = True
                     yield event_long
                 if click_count == 1:
@@ -149,7 +151,7 @@ def read_key_events(chip_device, chip_line):
 
                 if edge_event == gpiod.EdgeEvent.Type.FALLING_EDGE: # pressed
                     if click_count == 0: # arm longpress detection
-                        wait = time_long_press 
+                        wait = time_long_press
 
                 elif edge_event == gpiod.EdgeEvent.Type.RISING_EDGE: # released
                     if ignore_release:
@@ -157,12 +159,12 @@ def read_key_events(chip_device, chip_line):
                         continue
                     click_count += 1
                     if click_count == 1:
-                        wait = time_double_click 
+                        wait = time_double_click
                     if click_count == 2 and wait == time_double_click:
                         click_count = 0
                         wait = None
                         yield event_double
-                     
+
 
 def watch_key(q=None):
 
@@ -209,6 +211,8 @@ def fan_temp2dc(t):
 
     return duty
 
+def fan_after_run(time,run_start_time):
+    return time > run_start_time + conf['fan']['after_run']
 
 def fan_switch():
     conf['run'].value = not conf['run'].value
